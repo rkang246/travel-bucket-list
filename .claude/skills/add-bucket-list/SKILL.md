@@ -13,10 +13,12 @@ when it is best to go, then merging it into the `DATA` array.
 `$ARGUMENTS` is the place to add (e.g. `Patagonia`, `Iceland`, `Grand Canyon`).
 
 Read [`CLAUDE.md`](../../../CLAUDE.md) first if you are unsure of the data model.
-The model is **place → events**, where each event has `title`, `months` (array of
-`1`–`12`, or `"all"`), `category` (`nature` | `city`),
-`duration`, an optional `note`, and an optional `prereq` (advance prep, such as a
-permit you must apply for ahead of time).
+The model is **place → events**, where each event has `title` (the subheading —
+the `place` name is the card's main heading), `months` (array of `1`–`12`, or
+`"all"`), `category` (`nature` | `city`), `scope` (`trip` | `daytrip`),
+`duration`, optional `highlights` (sub-bullets of what to look for), an optional
+`note`, and an optional `prereq` (advance prep, such as a permit you must apply
+for ahead of time).
 
 ## Workflow
 
@@ -47,6 +49,13 @@ time(s) of year to experience the place.
 - Pick a sensible `category` (`nature` or `city`) for each event and estimate a
   `duration`. Add a short
   `note` when there is a useful caveat (e.g. "peak bloom is short, late March").
+- **Set `scope`.** Use `daytrip` if it's a single excursion the user could
+  reasonably drive to from the **Bay Area** and do in a day (wake up and go);
+  otherwise use `trip` for a multi-day trip that needs real planning. When unsure,
+  consider drive time / whether an overnight is effectively required.
+- **Add `highlights`.** From your research, list 2-4 short bullets of the specific
+  things to look for or do on this experience (signature viewpoints, trails,
+  wildlife, must-see spots). These render as sub-bullets on the card.
 - **Research prerequisites.** Check whether the experience needs anything arranged
   in advance — a permit or lottery (e.g. Angels Landing, Half Dome cables, Inca
   Trail), timed-entry reservation, guide/outfitter booking, or similar. If so,
@@ -55,9 +64,9 @@ time(s) of year to experience the place.
 
 ### 2. Propose and pause
 Present the proposed place and its events as a clear summary (place, region, and a
-list of events with their months, category, duration, notes, and any **prereq /
-advance prep** — call these out clearly so the user knows what to arrange ahead of
-time).
+list of events with their months, category, **scope (multi-day / day trip)**,
+duration, highlights, notes, and any **prereq / advance prep** — call these out
+clearly so the user knows what to arrange ahead of time).
 
 - Make clear **how many trips** the proposal implies and **why**. If everything
   fits one trip, say so and give the recommended window. If you split, briefly
@@ -85,7 +94,12 @@ Once the user confirms:
          title: "Experience",
          months: [4, 5],
          category: "nature",
+         scope: "trip",
          duration: "2-3 days",
+         highlights: [
+           "Signature viewpoint or trail",
+           "Wildlife / seasonal thing to look for"
+         ],
          note: "Optional note.",
          prereq: "Optional advance prep, e.g. permit lottery on recreation.gov."
        }

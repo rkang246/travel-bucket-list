@@ -147,6 +147,21 @@
   }
   .event:last-child { margin-bottom: 0; }
   .event .e-title { font-weight: 600; font-size: 0.92rem; }
+  .event .e-place-main { font-weight: 700; font-size: 1rem; line-height: 1.2; }
+  .event .e-place-main.clickable { cursor: pointer; }
+  .event .e-place-main.clickable:hover { color: var(--accent); text-decoration: underline; }
+  .event .e-region-inline { color: var(--muted); font-weight: 400; font-size: 0.76rem; }
+  .event .e-sub { color: var(--text); opacity: 0.82; font-size: 0.85rem; margin-top: 2px; }
+  .event .e-highlights {
+    margin: 8px 0 0;
+    padding-left: 16px;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  .event .e-highlights li { margin-bottom: 2px; }
+  .event .tag.scope { color: var(--text); }
+  .event .tag.scope.trip { color: #ffd8a8; border-color: rgba(255,146,43,0.5); }
+  .event .tag.scope.daytrip { color: #b2f2bb; border-color: rgba(81,207,102,0.5); }
   .event .e-place { color: var(--muted); font-size: 0.78rem; }
   .event .e-meta {
     display: flex;
@@ -245,6 +260,9 @@
   <div class="control-group" id="catToggles">
     <span class="control-label">Categories</span>
   </div>
+  <div class="control-group" id="scopeToggles">
+    <span class="control-label">Trip type</span>
+  </div>
 </div>
 
 <main>
@@ -267,10 +285,17 @@
      place:   place name (string)
      region:  where it is (string)
      events:  array of experiences at that place, each with:
-       title:    name of the experience (string)
+       title:    the specific experience / sub-heading (string). The PLACE name
+                 is the card's main heading; this title is the smaller subheading.
+                 So one place can have several titled events (e.g. Yosemite →
+                 "Firefall", "Waterfalls at peak flow").
        months:   array of month numbers 1-12, OR the string "all" (year-round)
        category: "nature" | "city"
+       scope:    "trip" (multi-day trip that needs planning) | "daytrip"
+                 (single excursion drivable from the Bay Area — wake-up-and-go).
        duration: how long it takes (string, e.g. "2-3 days")
+       highlights: optional array of short strings — the things to look for /
+                 do on this experience. Rendered as sub-bullets on the card.
        note:     optional extra detail (string) — omit if not needed
        prereq:   optional advance prep / prerequisite (string) — e.g. a permit
                  you must apply for ahead of time. Shown as a highlighted badge.
@@ -285,41 +310,71 @@ const DATA = [
         title: "Firefall at Horsetail Fall",
         months: [2],
         category: "nature",
+        scope: "trip",
         duration: "1-2 days",
+        highlights: [
+          "Horsetail Fall glows orange ~10-15 min before sunset",
+          "Best clear-sky evenings mid-to-late February",
+          "Stake out the El Capitan picnic-area viewpoint early"
+        ],
         note: "Mid-to-late February only, when sunset light sets the fall glowing."
       },
       {
         title: "Waterfalls at peak flow",
         months: [4, 5, 6],
         category: "nature",
+        scope: "trip",
         duration: "3-4 days",
+        highlights: [
+          "Yosemite Falls & Bridalveil at thunderous peak",
+          "Hike the Mist Trail to Vernal & Nevada Falls",
+          "Expect heavy spray — bring a rain shell"
+        ],
         note: "Snowmelt makes Yosemite Falls and Vernal Fall thunder."
       },
       {
         title: "High country & Tuolumne Meadows",
         months: [7, 8, 9],
         category: "nature",
+        scope: "trip",
         duration: "4-5 days",
+        highlights: [
+          "Tioga Road & Tuolumne Meadows are open",
+          "Alpine lakes: Cathedral, May Lake, Elizabeth Lake",
+          "Meadow wildflowers at their peak"
+        ],
         note: "Tioga Road is open; alpine trails are clear of snow."
       }
     ]
   },
   {
-    place: "Banff National Park",
-    region: "Alberta, Canada",
+    place: "Point Reyes National Seashore",
+    region: "Marin County, CA",
     events: [
       {
-        title: "Larch Valley golden hike",
-        months: [9],
+        title: "Wildflowers & tule elk",
+        months: [4, 5],
         category: "nature",
+        scope: "daytrip",
         duration: "1 day",
-        note: "Larches turn gold for a short window in late September."
+        highlights: [
+          "Tule elk herd along Tomales Point Trail",
+          "Coastal wildflowers near Chimney Rock",
+          "Point Reyes Lighthouse (308 steps down)"
+        ],
+        note: "~1.5-2 hr drive from the Bay Area; great spontaneous Saturday."
       },
       {
-        title: "Lake Louise turquoise paddling",
-        months: [7, 8],
+        title: "Elephant seal season",
+        months: [12, 1, 2],
         category: "nature",
-        duration: "2-3 days"
+        scope: "daytrip",
+        duration: "1 day",
+        highlights: [
+          "Elephant seal colony at Chimney Rock",
+          "Pupping & breeding peaks in January",
+          "Watch offshore for migrating gray whales"
+        ]
       }
     ]
   },
@@ -331,7 +386,13 @@ const DATA = [
         title: "The Narrows (bottom-up wade)",
         months: [6, 7, 9],
         category: "nature",
+        scope: "trip",
         duration: "1 day",
+        highlights: [
+          "Wade upriver through the slot canyon",
+          "Wall Street is the dramatic narrow section",
+          "Rent canyoneering boots, drysuit & a stick"
+        ],
         note: "Late spring/early summer has lower, warmer flows; check flash-flood risk.",
         prereq: "No permit for bottom-up day hikes, but rent drysuit/canyoneering boots in advance and check the river flow forecast (CFS) before going."
       },
@@ -339,7 +400,13 @@ const DATA = [
         title: "Angels Landing",
         months: [4, 5, 10],
         category: "nature",
+        scope: "trip",
         duration: "1 day",
+        highlights: [
+          "Chains section along the exposed spine",
+          "Sweeping views over Zion Canyon",
+          "Start at dawn to beat heat and crowds"
+        ],
         prereq: "Permit REQUIRED. Apply via the Zion permit lottery (seasonal advance lottery + day-before lottery) on recreation.gov well ahead of your dates."
       }
     ]
@@ -352,14 +419,26 @@ const DATA = [
         title: "Cherry blossom season",
         months: [3, 4],
         category: "city",
+        scope: "trip",
         duration: "4-6 days",
+        highlights: [
+          "Philosopher's Path lined with sakura",
+          "Evening hanami at Maruyama Park",
+          "Arashiyama and Daigo-ji temple grounds"
+        ],
         note: "Peak sakura usually late March to early April."
       },
       {
         title: "Autumn maple foliage",
         months: [11],
         category: "city",
+        scope: "trip",
         duration: "4-6 days",
+        highlights: [
+          "Tofuku-ji maple valley from the bridge",
+          "Eikan-do evening illuminations",
+          "Arashiyama bamboo grove with fall color"
+        ],
         note: "Temple gardens turn crimson in mid-to-late November."
       }
     ]
@@ -376,13 +455,19 @@ const CATEGORIES = [
   { key: "city",   label: "City",   color: "var(--city)"   }
 ];
 const catColor = c => ({ nature: "var(--nature)", city: "var(--city)" }[c] || "var(--muted)");
+const SCOPES = [
+  { key: "trip",    label: "Multi-day trip",     short: "🧳 Multi-day" },
+  { key: "daytrip", label: "Day trip (Bay Area)", short: "🚗 Day trip"  }
+];
+const scopeShort = s => (SCOPES.find(x => x.key === s) || {}).short || s;
 
 const state = {
   view: "month",                // "month" | "place"
   compact: true,                // compact = multi-month events show only in their first month
   selectedMonth: null,          // 1-12 or null
   selectedPlace: null,          // place name to focus in place view, or null
-  activeCats: new Set(CATEGORIES.map(c => c.key))
+  activeCats: new Set(CATEGORIES.map(c => c.key)),
+  activeScopes: new Set(SCOPES.map(s => s.key))
 };
 
 // Flatten DATA into {place, region, ...event} records.
@@ -400,6 +485,13 @@ function isYearRound(rec) {
   return rec.months === "all";
 }
 
+// A record passes when its category and scope are both currently enabled.
+// Missing scope is treated as always-visible so older entries still show.
+function passesFilters(rec) {
+  return state.activeCats.has(rec.category)
+    && (!rec.scope || state.activeScopes.has(rec.scope));
+}
+
 function eventEl(rec, opts = {}) {
   const showPlace = opts.showPlace !== false;
   const el = document.createElement("div");
@@ -408,19 +500,27 @@ function eventEl(rec, opts = {}) {
   const monthsLabel = isYearRound(rec)
     ? "Year-round"
     : (rec.months || []).map(m => MONTHS[m]).join(", ");
+  const highlights = rec.highlights || [];
+  // Month view: PLACE is the main heading, the event title is the subheading.
+  // Place view: the card already shows the place, so the title is the heading.
+  const heading = showPlace
+    ? `<div class="e-place-main clickable" title="See all ways to experience ${escapeHtml(rec.place)}">${escapeHtml(rec.place)}<span class="e-region-inline"> · ${escapeHtml(rec.region)}</span></div>
+       <div class="e-sub">${escapeHtml(rec.title)}</div>`
+    : `<div class="e-title">${escapeHtml(rec.title)}</div>`;
   el.innerHTML = `
-    <div class="e-title">${escapeHtml(rec.title)}</div>
-    ${showPlace ? `<div class="e-place clickable" title="See all ways to experience ${escapeHtml(rec.place)}">${escapeHtml(rec.place)} · ${escapeHtml(rec.region)}</div>` : ""}
+    ${heading}
     <div class="e-meta">
       <span class="tag cat" style="--c:${catColor(rec.category)}">${escapeHtml(rec.category)}</span>
+      ${rec.scope ? `<span class="tag scope ${escapeHtml(rec.scope)}">${escapeHtml(scopeShort(rec.scope))}</span>` : ""}
       ${rec.duration ? `<span class="tag">${escapeHtml(rec.duration)}</span>` : ""}
       <span class="tag">${escapeHtml(monthsLabel)}</span>
     </div>
+    ${highlights.length ? `<ul class="e-highlights">${highlights.map(h => `<li>${escapeHtml(h)}</li>`).join("")}</ul>` : ""}
     ${rec.note ? `<div class="e-note">${escapeHtml(rec.note)}</div>` : ""}
     ${rec.prereq ? `<div class="e-prereq"><span class="prereq-label">⚠ Plan ahead</span> ${escapeHtml(rec.prereq)}</div>` : ""}
   `;
   if (showPlace) {
-    const placeEl = el.querySelector(".e-place.clickable");
+    const placeEl = el.querySelector(".e-place-main.clickable");
     if (placeEl) placeEl.addEventListener("click", () => focusPlace(rec.place));
   }
   return el;
@@ -444,7 +544,7 @@ function renderMonthView() {
   document.getElementById("monthPills").style.display = "";
   document.getElementById("displayToggle").style.display = "";
 
-  const recs = flatten().filter(r => state.activeCats.has(r.category));
+  const recs = flatten().filter(passesFilters);
 
   // Year-round band
   const yr = recs.filter(isYearRound);
@@ -510,8 +610,8 @@ function renderPlaceView() {
   let anyShown = false;
   DATA.forEach(p => {
     const evs = (p.events || [])
-      .filter(e => state.activeCats.has(e.category))
       .map(e => ({ place: p.place, region: p.region, ...e }))
+      .filter(passesFilters)
       .sort((a, b) => minMonth(a) - minMonth(b));
     if (evs.length === 0) return;
 
@@ -667,10 +767,28 @@ function buildCatToggles() {
   });
 }
 
+function buildScopeToggles() {
+  const wrap = document.getElementById("scopeToggles");
+  SCOPES.forEach(s => {
+    const pill = document.createElement("button");
+    pill.className = "pill";
+    pill.textContent = s.short;
+    pill.title = s.label;
+    pill.addEventListener("click", () => {
+      if (state.activeScopes.has(s.key)) state.activeScopes.delete(s.key);
+      else state.activeScopes.add(s.key);
+      pill.classList.toggle("off", !state.activeScopes.has(s.key));
+      render();
+    });
+    wrap.appendChild(pill);
+  });
+}
+
 buildViewToggle();
 buildDisplayToggle();
 buildMonthPills();
 buildCatToggles();
+buildScopeToggles();
 render();
 </script>
 </body>
