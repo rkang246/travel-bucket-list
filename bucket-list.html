@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Experiential Bucket List</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --panel: #1a1d27;
+    --panel-2: #222632;
+    --text: #e7e9ee;
+    --muted: #9aa0ad;
+    --line: #2c303c;
+    --accent: #6ea8fe;
+    --nature: #51cf66;
+    --city: #ff922b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.45;
+  }
+  header {
+    padding: 28px 24px 8px;
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+  h1 { margin: 0 0 4px; font-size: 1.6rem; }
+  .sub { color: var(--muted); font-size: 0.95rem; margin: 0; }
+
+  .controls {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 16px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .control-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .control-label {
+    color: var(--muted);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-right: 4px;
+    min-width: 70px;
+  }
+
+  .pill {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--text);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    user-select: none;
+  }
+  .pill:hover { border-color: var(--accent); }
+  .pill.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #0f1117;
+    font-weight: 600;
+  }
+  .pill.off { opacity: 0.35; }
+
+  .cat-toggle::before {
+    content: "";
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+    background: var(--c, var(--muted));
+  }
+
+  .clear-btn {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  .clear-btn:hover { color: var(--text); border-color: var(--accent); }
+
+  main { max-width: 1280px; margin: 0 auto; padding: 8px 24px 60px; }
+
+  .band {
+    background: linear-gradient(90deg, var(--panel-2), var(--panel));
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 20px;
+  }
+  .band h2 { margin: 0 0 10px; font-size: 1rem; color: var(--muted); font-weight: 600; }
+  .band .events { display: flex; flex-wrap: wrap; gap: 10px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+  }
+  .month-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px 14px 16px;
+    display: flex;
+    flex-direction: column;
+    min-height: 120px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  }
+  .month-card.dim { opacity: 0.32; }
+  .month-card.highlight {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent), 0 8px 30px rgba(110,168,254,0.15);
+  }
+  .month-card h3 {
+    margin: 0 0 10px;
+    font-size: 1.05rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .month-card h3 .count { font-size: 0.75rem; color: var(--muted); font-weight: 500; }
+
+  .event {
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--c, var(--muted));
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+  }
+  .event:last-child { margin-bottom: 0; }
+  .event .e-title { font-weight: 600; font-size: 0.92rem; }
+  .event .e-place { color: var(--muted); font-size: 0.78rem; }
+  .event .e-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+  .event .tag {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 1px 6px;
+  }
+  .event .tag.cat { color: var(--c); border-color: var(--c); }
+  .event .e-note { margin-top: 6px; font-size: 0.78rem; color: var(--muted); font-style: italic; }
+  .event .e-prereq {
+    margin-top: 7px;
+    font-size: 0.78rem;
+    color: #ffe3b3;
+    background: rgba(255,169,77,0.10);
+    border: 1px solid rgba(255,169,77,0.40);
+    border-radius: 6px;
+    padding: 6px 8px;
+    line-height: 1.4;
+  }
+  .event .e-prereq .prereq-label {
+    display: inline-block;
+    font-weight: 700;
+    color: #ffc078;
+    margin-right: 4px;
+    text-transform: uppercase;
+    font-size: 0.68rem;
+    letter-spacing: 0.03em;
+  }
+
+  /* Place view */
+  .place-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px 16px 18px;
+    margin-bottom: 16px;
+    transition: border-color 0.15s ease, opacity 0.15s ease;
+  }
+  .place-card.dim { opacity: 0.3; }
+  .place-card.focus { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .place-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    cursor: pointer;
+  }
+  .place-head:hover .place-name { color: var(--accent); }
+  .place-name { font-size: 1.15rem; font-weight: 700; margin: 0; }
+  .place-region { color: var(--muted); font-size: 0.82rem; font-weight: 400; }
+  .place-count { color: var(--muted); font-size: 0.76rem; white-space: nowrap; }
+  .month-strip { display: flex; gap: 3px; margin: 12px 0 14px; }
+  .ms-cell {
+    flex: 1;
+    text-align: center;
+    font-size: 0.6rem;
+    color: var(--muted);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 3px 0;
+  }
+  .ms-cell.on { background: var(--accent); color: #0f1117; border-color: var(--accent); font-weight: 700; }
+  .place-events { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+  .e-place.clickable { cursor: pointer; }
+  .e-place.clickable:hover { color: var(--accent); text-decoration: underline; }
+
+  .empty { color: var(--muted); font-size: 0.85rem; font-style: italic; }
+  footer { max-width: 1280px; margin: 0 auto; padding: 0 24px 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🗺️ Experiential Bucket List</h1>
+  <p class="sub">Places &amp; experiences arranged by the best month to go. Click a month to focus it; toggle categories to filter.</p>
+</header>
+
+<div class="controls">
+  <div class="control-group" id="viewToggle">
+    <span class="control-label">View</span>
+  </div>
+  <div class="control-group" id="displayToggle">
+    <span class="control-label">Display</span>
+  </div>
+  <div class="control-group" id="monthPills">
+    <span class="control-label">Months</span>
+  </div>
+  <div class="control-group" id="catToggles">
+    <span class="control-label">Categories</span>
+  </div>
+</div>
+
+<main>
+  <div class="band" id="yearRoundBand">
+    <h2>🟢 Year-round</h2>
+    <div class="events" id="yearRoundEvents"></div>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div id="placeGrid" style="display:none"></div>
+</main>
+
+<footer>
+  Offline-capable · no build step · edit the <code>DATA</code> array in this file to add your own places.
+</footer>
+
+<script>
+/* =========================================================================
+   DATA — the ONLY thing you should edit.
+   Model: place → events.
+     place:   place name (string)
+     region:  where it is (string)
+     events:  array of experiences at that place, each with:
+       title:    name of the experience (string)
+       months:   array of month numbers 1-12, OR the string "all" (year-round)
+       category: "nature" | "city"
+       duration: how long it takes (string, e.g. "2-3 days")
+       note:     optional extra detail (string) — omit if not needed
+       prereq:   optional advance prep / prerequisite (string) — e.g. a permit
+                 you must apply for ahead of time. Shown as a highlighted badge.
+                 Omit the field if there is nothing to arrange in advance.
+   ========================================================================= */
+const DATA = [
+  {
+    place: "Yosemite National Park",
+    region: "California, USA",
+    events: [
+      {
+        title: "Firefall at Horsetail Fall",
+        months: [2],
+        category: "nature",
+        duration: "1-2 days",
+        note: "Mid-to-late February only, when sunset light sets the fall glowing."
+      },
+      {
+        title: "Waterfalls at peak flow",
+        months: [4, 5, 6],
+        category: "nature",
+        duration: "3-4 days",
+        note: "Snowmelt makes Yosemite Falls and Vernal Fall thunder."
+      },
+      {
+        title: "High country & Tuolumne Meadows",
+        months: [7, 8, 9],
+        category: "nature",
+        duration: "4-5 days",
+        note: "Tioga Road is open; alpine trails are clear of snow."
+      }
+    ]
+  },
+  {
+    place: "Banff National Park",
+    region: "Alberta, Canada",
+    events: [
+      {
+        title: "Larch Valley golden hike",
+        months: [9],
+        category: "nature",
+        duration: "1 day",
+        note: "Larches turn gold for a short window in late September."
+      },
+      {
+        title: "Lake Louise turquoise paddling",
+        months: [7, 8],
+        category: "nature",
+        duration: "2-3 days"
+      }
+    ]
+  },
+  {
+    place: "Zion National Park",
+    region: "Utah, USA",
+    events: [
+      {
+        title: "The Narrows (bottom-up wade)",
+        months: [6, 7, 9],
+        category: "nature",
+        duration: "1 day",
+        note: "Late spring/early summer has lower, warmer flows; check flash-flood risk.",
+        prereq: "No permit for bottom-up day hikes, but rent drysuit/canyoneering boots in advance and check the river flow forecast (CFS) before going."
+      },
+      {
+        title: "Angels Landing",
+        months: [4, 5, 10],
+        category: "nature",
+        duration: "1 day",
+        prereq: "Permit REQUIRED. Apply via the Zion permit lottery (seasonal advance lottery + day-before lottery) on recreation.gov well ahead of your dates."
+      }
+    ]
+  },
+  {
+    place: "Kyoto",
+    region: "Japan",
+    events: [
+      {
+        title: "Cherry blossom season",
+        months: [3, 4],
+        category: "city",
+        duration: "4-6 days",
+        note: "Peak sakura usually late March to early April."
+      },
+      {
+        title: "Autumn maple foliage",
+        months: [11],
+        category: "city",
+        duration: "4-6 days",
+        note: "Temple gardens turn crimson in mid-to-late November."
+      }
+    ]
+  }
+];
+
+/* =========================================================================
+   Rendering & interaction — leave everything below this line intact.
+   ========================================================================= */
+const MONTHS = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const CATEGORIES = [
+  { key: "nature", label: "Nature", color: "var(--nature)" },
+  { key: "city",   label: "City",   color: "var(--city)"   }
+];
+const catColor = c => ({ nature: "var(--nature)", city: "var(--city)" }[c] || "var(--muted)");
+
+const state = {
+  view: "month",                // "month" | "place"
+  compact: true,                // compact = multi-month events show only in their first month
+  selectedMonth: null,          // 1-12 or null
+  selectedPlace: null,          // place name to focus in place view, or null
+  activeCats: new Set(CATEGORIES.map(c => c.key))
+};
+
+// Flatten DATA into {place, region, ...event} records.
+function flatten() {
+  const recs = [];
+  DATA.forEach(p => {
+    (p.events || []).forEach(e => {
+      recs.push({ place: p.place, region: p.region, ...e });
+    });
+  });
+  return recs;
+}
+
+function isYearRound(rec) {
+  return rec.months === "all";
+}
+
+function eventEl(rec, opts = {}) {
+  const showPlace = opts.showPlace !== false;
+  const el = document.createElement("div");
+  el.className = "event";
+  el.style.setProperty("--c", catColor(rec.category));
+  const monthsLabel = isYearRound(rec)
+    ? "Year-round"
+    : (rec.months || []).map(m => MONTHS[m]).join(", ");
+  el.innerHTML = `
+    <div class="e-title">${escapeHtml(rec.title)}</div>
+    ${showPlace ? `<div class="e-place clickable" title="See all ways to experience ${escapeHtml(rec.place)}">${escapeHtml(rec.place)} · ${escapeHtml(rec.region)}</div>` : ""}
+    <div class="e-meta">
+      <span class="tag cat" style="--c:${catColor(rec.category)}">${escapeHtml(rec.category)}</span>
+      ${rec.duration ? `<span class="tag">${escapeHtml(rec.duration)}</span>` : ""}
+      <span class="tag">${escapeHtml(monthsLabel)}</span>
+    </div>
+    ${rec.note ? `<div class="e-note">${escapeHtml(rec.note)}</div>` : ""}
+    ${rec.prereq ? `<div class="e-prereq"><span class="prereq-label">⚠ Plan ahead</span> ${escapeHtml(rec.prereq)}</div>` : ""}
+  `;
+  if (showPlace) {
+    const placeEl = el.querySelector(".e-place.clickable");
+    if (placeEl) placeEl.addEventListener("click", () => focusPlace(rec.place));
+  }
+  return el;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function render() {
+  if (state.view === "place") renderPlaceView();
+  else renderMonthView();
+}
+
+function renderMonthView() {
+  // Toggle containers
+  document.getElementById("yearRoundBand").style.display = "";
+  document.getElementById("grid").style.display = "";
+  document.getElementById("placeGrid").style.display = "none";
+  document.getElementById("monthPills").style.display = "";
+  document.getElementById("displayToggle").style.display = "";
+
+  const recs = flatten().filter(r => state.activeCats.has(r.category));
+
+  // Year-round band
+  const yr = recs.filter(isYearRound);
+  const band = document.getElementById("yearRoundEvents");
+  band.innerHTML = "";
+  if (yr.length === 0) {
+    band.innerHTML = `<span class="empty">No year-round experiences match the current filters.</span>`;
+  } else {
+    yr.forEach(r => band.appendChild(eventEl(r)));
+  }
+
+  // Month grid
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  for (let m = 1; m <= 12; m++) {
+    const monthRecs = recs.filter(r => {
+      if (isYearRound(r)) return false;
+      if (state.compact) return minMonth(r) === m;       // first month only
+      return (r.months || []).includes(m);                // every month it spans
+    });
+    const card = document.createElement("div");
+    card.className = "month-card";
+    if (state.selectedMonth !== null) {
+      if (state.selectedMonth === m) card.classList.add("highlight");
+      else card.classList.add("dim");
+    }
+    let inner = `<h3><span>${MONTHS[m]}</span><span class="count">${monthRecs.length || ""}</span></h3>`;
+    card.innerHTML = inner;
+    if (monthRecs.length === 0) {
+      const e = document.createElement("div");
+      e.className = "empty";
+      e.textContent = "—";
+      card.appendChild(e);
+    } else {
+      monthRecs.forEach(r => card.appendChild(eventEl(r)));
+    }
+    grid.appendChild(card);
+  }
+}
+
+function minMonth(rec) {
+  if (isYearRound(rec)) return 0;          // year-round sorts first
+  return Math.min(...(rec.months || [99]));
+}
+
+function focusPlace(place) {
+  state.view = "place";
+  state.selectedPlace = place;
+  syncViewToggle();
+  render();
+}
+
+function renderPlaceView() {
+  // Toggle containers
+  document.getElementById("yearRoundBand").style.display = "none";
+  document.getElementById("grid").style.display = "none";
+  document.getElementById("monthPills").style.display = "none";
+  document.getElementById("displayToggle").style.display = "none";
+  const pg = document.getElementById("placeGrid");
+  pg.style.display = "";
+  pg.innerHTML = "";
+
+  let anyShown = false;
+  DATA.forEach(p => {
+    const evs = (p.events || [])
+      .filter(e => state.activeCats.has(e.category))
+      .map(e => ({ place: p.place, region: p.region, ...e }))
+      .sort((a, b) => minMonth(a) - minMonth(b));
+    if (evs.length === 0) return;
+
+    const focused = state.selectedPlace === p.place;
+    const card = document.createElement("div");
+    card.className = "place-card";
+    if (state.selectedPlace) card.classList.add(focused ? "focus" : "dim");
+
+    // Header (click to focus / unfocus this place)
+    const head = document.createElement("div");
+    head.className = "place-head";
+    head.innerHTML = `
+      <div>
+        <span class="place-name">${escapeHtml(p.place)}</span>
+        <span class="place-region">· ${escapeHtml(p.region)}</span>
+      </div>
+      <span class="place-count">${evs.length} ${evs.length === 1 ? "way" : "ways"} to experience</span>
+    `;
+    head.addEventListener("click", () => {
+      state.selectedPlace = focused ? null : p.place;
+      render();
+    });
+    card.appendChild(head);
+
+    // Month-coverage strip
+    const covered = new Set();
+    evs.forEach(e => {
+      if (isYearRound(e)) { for (let m = 1; m <= 12; m++) covered.add(m); }
+      else (e.months || []).forEach(m => covered.add(m));
+    });
+    const strip = document.createElement("div");
+    strip.className = "month-strip";
+    for (let m = 1; m <= 12; m++) {
+      const cell = document.createElement("div");
+      cell.className = "ms-cell" + (covered.has(m) ? " on" : "");
+      cell.textContent = MONTHS[m][0];
+      cell.title = MONTHS[m];
+      strip.appendChild(cell);
+    }
+    card.appendChild(strip);
+
+    // Events for this place (place name hidden — it's the card header)
+    const wrap = document.createElement("div");
+    wrap.className = "place-events";
+    evs.forEach(e => wrap.appendChild(eventEl(e, { showPlace: false })));
+    card.appendChild(wrap);
+
+    pg.appendChild(card);
+    anyShown = true;
+  });
+
+  if (!anyShown) {
+    pg.innerHTML = `<p class="empty">No places match the current category filters.</p>`;
+  }
+}
+
+const VIEWS = [
+  { key: "month", label: "By month" },
+  { key: "place", label: "By place" }
+];
+
+function buildViewToggle() {
+  const wrap = document.getElementById("viewToggle");
+  VIEWS.forEach(v => {
+    const pill = document.createElement("button");
+    pill.className = "pill";
+    pill.textContent = v.label;
+    pill._view = v.key;
+    pill.addEventListener("click", () => {
+      if (state.view === v.key) return;
+      state.view = v.key;
+      if (v.key === "month") state.selectedPlace = null;
+      syncViewToggle();
+      render();
+    });
+    wrap.appendChild(pill);
+  });
+  syncViewToggle();
+}
+
+function syncViewToggle() {
+  document.querySelectorAll("#viewToggle .pill").forEach(p => {
+    p.classList.toggle("active", p._view === state.view);
+  });
+}
+
+function buildDisplayToggle() {
+  const wrap = document.getElementById("displayToggle");
+  const pill = document.createElement("button");
+  pill.className = "pill";
+  pill.id = "compactPill";
+  pill.textContent = "Compact";
+  pill.title = "Show each multi-month event only in its first month (caption still lists all months).";
+  pill.addEventListener("click", () => {
+    state.compact = !state.compact;
+    syncDisplayToggle();
+    render();
+  });
+  wrap.appendChild(pill);
+  syncDisplayToggle();
+}
+
+function syncDisplayToggle() {
+  const pill = document.getElementById("compactPill");
+  if (pill) pill.classList.toggle("active", state.compact);
+}
+
+function buildMonthPills() {
+  const wrap = document.getElementById("monthPills");
+  for (let m = 1; m <= 12; m++) {
+    const pill = document.createElement("button");
+    pill.className = "pill";
+    pill.textContent = MONTHS[m];
+    pill.addEventListener("click", () => {
+      state.selectedMonth = (state.selectedMonth === m) ? null : m;
+      syncMonthPills();
+      render();
+    });
+    pill._month = m;
+    wrap.appendChild(pill);
+  }
+  const clear = document.createElement("button");
+  clear.className = "clear-btn";
+  clear.textContent = "Clear";
+  clear.addEventListener("click", () => {
+    state.selectedMonth = null;
+    syncMonthPills();
+    render();
+  });
+  wrap.appendChild(clear);
+}
+
+function syncMonthPills() {
+  document.querySelectorAll("#monthPills .pill").forEach(p => {
+    p.classList.toggle("active", p._month === state.selectedMonth);
+  });
+}
+
+function buildCatToggles() {
+  const wrap = document.getElementById("catToggles");
+  CATEGORIES.forEach(c => {
+    const pill = document.createElement("button");
+    pill.className = "pill cat-toggle";
+    pill.style.setProperty("--c", c.color);
+    pill.textContent = c.label;
+    pill.addEventListener("click", () => {
+      if (state.activeCats.has(c.key)) state.activeCats.delete(c.key);
+      else state.activeCats.add(c.key);
+      pill.classList.toggle("off", !state.activeCats.has(c.key));
+      render();
+    });
+    wrap.appendChild(pill);
+  });
+}
+
+buildViewToggle();
+buildDisplayToggle();
+buildMonthPills();
+buildCatToggles();
+render();
+</script>
+</body>
+</html>
