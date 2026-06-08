@@ -13,8 +13,7 @@
     --muted: #9aa0ad;
     --line: #2c303c;
     --accent: #6ea8fe;
-    --nature: #51cf66;
-    --city: #ff922b;
+    --park: #51cf66;
   }
   * { box-sizing: border-box; }
   body {
@@ -105,8 +104,24 @@
     padding: 16px 18px;
     margin-bottom: 20px;
   }
-  .band h2 { margin: 0 0 10px; font-size: 1rem; color: var(--muted); font-weight: 600; }
+  .band h2 { margin: 0 0 10px; font-size: 1rem; color: var(--muted); font-weight: 600; cursor: pointer; user-select: none; }
   .band .events { display: flex; flex-wrap: wrap; gap: 10px; }
+  .band.collapsed h2 { margin-bottom: 0; }
+  .band.collapsed .events { display: none; }
+
+  /* Reusable collapse caret (points down when open, right when collapsed) */
+  .caret {
+    display: inline-block;
+    width: 0.9em;
+    margin-right: 4px;
+    color: var(--muted);
+    transition: transform 0.15s ease;
+  }
+  .caret::before { content: "\25BE"; font-size: 0.85em; }
+  .collapsed > .caret,
+  .collapsed > h2 > .caret,
+  .collapsed > h3 > .caret,
+  .collapsed .place-head .caret { transform: rotate(-90deg); }
 
   .grid {
     display: grid;
@@ -136,6 +151,11 @@
     align-items: baseline;
   }
   .month-card h3 .count { font-size: 0.75rem; color: var(--muted); font-weight: 500; }
+  .month-card h3.clickable { cursor: pointer; user-select: none; }
+  .month-card h3 .head-left { display: inline-flex; align-items: baseline; }
+  .month-card.collapsed { min-height: 0; padding-bottom: 14px; align-self: start; }
+  .month-card.collapsed h3 { margin-bottom: 0; }
+  .month-card.collapsed > *:not(h3) { display: none; }
 
   .event {
     background: var(--panel-2);
@@ -218,6 +238,10 @@
     cursor: pointer;
   }
   .place-head:hover .place-name { color: var(--accent); }
+  .place-head-left { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+  .place-head .caret { cursor: pointer; align-self: center; }
+  .place-card.collapsed .month-strip,
+  .place-card.collapsed .place-events { display: none; }
   .place-name { font-size: 1.15rem; font-weight: 700; margin: 0; }
   .place-region { color: var(--muted); font-size: 0.82rem; font-weight: 400; }
   .place-count { color: var(--muted); font-size: 0.76rem; white-space: nowrap; }
@@ -267,7 +291,7 @@
 
 <main>
   <div class="band" id="yearRoundBand">
-    <h2>🟢 Year-round</h2>
+    <h2 id="yearRoundHead"><span class="caret"></span>🟢 Year-round</h2>
     <div class="events" id="yearRoundEvents"></div>
   </div>
   <div class="grid" id="grid"></div>
@@ -290,7 +314,7 @@
                  So one place can have several titled events (e.g. Yosemite →
                  "Firefall", "Waterfalls at peak flow").
        months:   array of month numbers 1-12, OR the string "all" (year-round)
-       category: "nature" | "city"
+       category: "park"
        scope:    "trip" (multi-day trip that needs planning) | "daytrip"
                  (single excursion drivable from the Bay Area — wake-up-and-go).
        duration: how long it takes (string, e.g. "2-3 days")
@@ -303,26 +327,128 @@
    ========================================================================= */
 const DATA = [
   {
+    place: "Mount Rainier National Park",
+    region: "Washington, USA",
+    events: [
+      {
+        title: "Subalpine wildflower bloom at Paradise",
+        months: [8],
+        category: "park",
+        scope: "trip",
+        duration: "2-3 days",
+        highlights: [
+          "Skyline Trail loop through the Paradise meadows",
+          "Lupine, paintbrush, avalanche lilies & penstemon in full color",
+          "Sunrise-area meadows with Rainier views",
+          "Reflection Lakes mirror shots"
+        ],
+        note: "Peak is roughly the last week of July through mid-August, but it shifts year to year with snowmelt — a heavy winter snowpack delays the bloom. Check the park's wildflower status page before going.",
+        prereq: "No timed entry in 2026 (first-come); arrive early for Paradise/Sunrise parking."
+      }
+    ]
+  },
+  {
+    place: "Zion National Park",
+    region: "Utah, USA",
+    events: [
+      {
+        title: "Canyon icons: Angels Landing & The Narrows",
+        months: [4, 5, 10],
+        category: "park",
+        scope: "trip",
+        duration: "2-3 days",
+        highlights: [
+          "Angels Landing chains along the exposed spine",
+          "The Narrows bottom-up wade through the slot canyon",
+          "Emerald Pools & Riverside Walk",
+          "Canyon shuttle to the trailheads"
+        ],
+        note: "Spring and October avoid summer heat; the Narrows is most wadeable late spring through early fall.",
+        prereq: "Angels Landing permit REQUIRED via the recreation.gov lottery (seasonal advance + day-before). For the Narrows, check the river flow (CFS)/flash-flood forecast and rent a drysuit & canyoneering boots."
+      }
+    ]
+  },
+  {
+    place: "Death Valley National Park",
+    region: "California, USA",
+    events: [
+      {
+        title: "Desert basins & dunes in the cool season",
+        months: [11, 12, 1, 2, 3],
+        category: "park",
+        scope: "trip",
+        duration: "2 days",
+        highlights: [
+          "Badwater Basin salt flats (lowest point in N. America)",
+          "Zabriskie Point at sunrise",
+          "Mesquite Flat sand dunes",
+          "Artist's Palette drive"
+        ],
+        note: "Winter and early spring only — summer is dangerously hot. A superbloom is rare, possible Feb–Mar after a wet winter."
+      }
+    ]
+  },
+  {
+    place: "White Sands National Park",
+    region: "New Mexico, USA",
+    events: [
+      {
+        title: "Gypsum dunes",
+        months: [10, 11, 3, 4],
+        category: "park",
+        scope: "trip",
+        duration: "1 day",
+        highlights: [
+          "Sled the white gypsum dunes",
+          "Sunset color across the dunefield",
+          "Alkali Flat Trail into the heart of the dunes",
+          "Full-moon nights"
+        ],
+        note: "Fall through spring is mild; summer is hot. The park road occasionally closes a few hours for missile-range tests — check the schedule before going."
+      }
+    ]
+  },
+  {
+    place: "Saguaro National Park",
+    region: "Arizona, USA",
+    events: [
+      {
+        title: "Giant saguaros in the cool season",
+        months: [11, 12, 1, 2, 3],
+        category: "park",
+        scope: "trip",
+        duration: "1-2 days",
+        highlights: [
+          "Towering saguaros in the Tucson Mtn & Rincon districts",
+          "Cactus Forest Loop Drive",
+          "Desert sunset among the cacti",
+          "Spring wildflowers on the desert floor"
+        ],
+        note: "Winter is ideal; saguaro blossoms peak in late May but it's hot by then."
+      }
+    ]
+  },
+  {
     place: "Yosemite National Park",
     region: "California, USA",
     events: [
       {
         title: "Firefall at Horsetail Fall",
         months: [2],
-        category: "nature",
+        category: "park",
         scope: "trip",
         duration: "1-2 days",
         highlights: [
           "Horsetail Fall glows orange ~10-15 min before sunset",
-          "Best clear-sky evenings mid-to-late February",
+          "Best on clear-sky evenings mid-to-late February",
           "Stake out the El Capitan picnic-area viewpoint early"
         ],
-        note: "Mid-to-late February only, when sunset light sets the fall glowing."
+        note: "Mid-to-late February only, when sunset light sets the fall glowing. No entry reservation required in 2026."
       },
       {
         title: "Waterfalls at peak flow",
         months: [4, 5, 6],
-        category: "nature",
+        category: "park",
         scope: "trip",
         duration: "3-4 days",
         highlights: [
@@ -335,7 +461,7 @@ const DATA = [
       {
         title: "High country & Tuolumne Meadows",
         months: [7, 8, 9],
-        category: "nature",
+        category: "park",
         scope: "trip",
         duration: "4-5 days",
         highlights: [
@@ -343,103 +469,353 @@ const DATA = [
           "Alpine lakes: Cathedral, May Lake, Elizabeth Lake",
           "Meadow wildflowers at their peak"
         ],
-        note: "Tioga Road is open; alpine trails are clear of snow."
+        note: "Tioga Road is open; alpine trails are clear of snow.",
+        prereq: "Half Dome cables require a permit via the recreation.gov lottery (preseason in spring + daily lottery)."
       }
     ]
   },
   {
-    place: "Point Reyes National Seashore",
-    region: "Marin County, CA",
+    place: "Yellowstone National Park",
+    region: "Wyoming / Montana / Idaho, USA",
     events: [
       {
-        title: "Wildflowers & tule elk",
-        months: [4, 5],
-        category: "nature",
-        scope: "daytrip",
-        duration: "1 day",
+        title: "Geysers & wildlife",
+        months: [6, 7, 8, 9],
+        category: "park",
+        scope: "trip",
+        duration: "4-5 days",
         highlights: [
-          "Tule elk herd along Tomales Point Trail",
-          "Coastal wildflowers near Chimney Rock",
-          "Point Reyes Lighthouse (308 steps down)"
+          "Grand Prismatic Spring & the geyser basins",
+          "Old Faithful eruptions",
+          "Lamar Valley wildlife — bison, wolves, bears",
+          "Grand Canyon of the Yellowstone & Lower Falls"
         ],
-        note: "~1.5-2 hr drive from the Bay Area; great spontaneous Saturday."
-      },
-      {
-        title: "Elephant seal season",
-        months: [12, 1, 2],
-        category: "nature",
-        scope: "daytrip",
-        duration: "1 day",
-        highlights: [
-          "Elephant seal colony at Chimney Rock",
-          "Pupping & breeding peaks in January",
-          "Watch offshore for migrating gray whales"
-        ]
+        note: "Most roads open late May–early November; June and September are quieter than midsummer."
       }
     ]
   },
   {
-    place: "Zion National Park",
+    place: "Lassen Volcanic National Park",
+    region: "California, USA",
+    events: [
+      {
+        title: "Hydrothermal basins & peak",
+        months: [7, 8, 9],
+        category: "park",
+        scope: "trip",
+        duration: "1-2 days",
+        highlights: [
+          "Bumpass Hell hydrothermal boardwalk",
+          "Summit Lassen Peak",
+          "Kings Creek Falls",
+          "Manzanita Lake reflections"
+        ],
+        note: "The park highway is often snowbound into June; full access comes mid-summer."
+      }
+    ]
+  },
+  {
+    place: "Glacier National Park",
+    region: "Montana, USA",
+    events: [
+      {
+        title: "Going-to-the-Sun Road & high trails",
+        months: [7, 8],
+        category: "park",
+        scope: "trip",
+        duration: "4-5 days",
+        highlights: [
+          "Drive Going-to-the-Sun Road over Logan Pass",
+          "Highline Trail along the Garden Wall",
+          "Hidden Lake Overlook",
+          "Many Glacier — grizzlies & the Grinnell Glacier hike"
+        ],
+        note: "Going-to-the-Sun Road is usually fully open early July–mid October. No vehicle reservation in 2026, but Logan Pass has a 3-hour parking limit.",
+        prereq: "Optional: grab a Going-to-the-Sun Road shuttle ticket on recreation.gov (released ~60 days ahead) to dodge Logan Pass parking."
+      }
+    ]
+  },
+  {
+    place: "Grand Canyon National Park",
+    region: "Arizona, USA",
+    events: [
+      {
+        title: "South Rim in the shoulder seasons",
+        months: [4, 5, 9, 10],
+        category: "park",
+        scope: "trip",
+        duration: "2-3 days",
+        highlights: [
+          "Rim Trail & Mather Point at sunrise",
+          "Descend Bright Angel or South Kaibab into the canyon",
+          "Desert View Watchtower",
+          "Hermit Road at sunset"
+        ],
+        note: "South Rim is open year-round; the North Rim is mid-May to mid-October only.",
+        prereq: "Rim-to-rim or any overnight below the rim needs a backcountry permit (recreation.gov)."
+      }
+    ]
+  },
+  {
+    place: "Crater Lake National Park",
+    region: "Oregon, USA",
+    events: [
+      {
+        title: "Rim Drive & the caldera",
+        months: [7, 8, 9],
+        category: "park",
+        scope: "trip",
+        duration: "1-2 days",
+        highlights: [
+          "Drive Rim Drive around the caldera",
+          "Watchman Peak at sunset",
+          "Cleetwood Cove Trail down to the lake (boat access)",
+          "The lake's intense blue water"
+        ],
+        note: "Rim Drive is typically fully open only July–October; deep snowpack buries it the rest of the year."
+      }
+    ]
+  },
+  {
+    place: "Olympic National Park",
+    region: "Washington, USA",
+    events: [
+      {
+        title: "Rainforest, ridge & coast",
+        months: [7, 8, 9],
+        category: "park",
+        scope: "trip",
+        duration: "3-4 days",
+        highlights: [
+          "Hoh Rain Forest",
+          "Hurricane Ridge alpine views",
+          "Rialto & Ruby Beach tidepools and sea stacks",
+          "Sol Duc Falls"
+        ],
+        note: "Summer is the dry season; the rainforest and coast are wet most of the year."
+      }
+    ]
+  },
+  {
+    place: "Grand Teton National Park",
+    region: "Wyoming, USA",
+    events: [
+      {
+        title: "Jenny Lake & the Teton range",
+        months: [6, 7, 8, 9],
+        category: "park",
+        scope: "trip",
+        duration: "2-3 days",
+        highlights: [
+          "Jenny Lake to Hidden Falls & Cascade Canyon",
+          "Oxbow Bend & Schwabacher Landing reflections (moose!)",
+          "Teton Park Road range views",
+          "Wildflowers in summer; golden aspen in late September"
+        ],
+        note: "Late June–July for wildflowers; late September for golden aspen and the elk rut. Pairs well with Yellowstone."
+      }
+    ]
+  },
+  {
+    place: "Bryce Canyon National Park",
     region: "Utah, USA",
     events: [
       {
-        title: "The Narrows (bottom-up wade)",
-        months: [6, 7, 9],
-        category: "nature",
+        title: "Hoodoo amphitheater",
+        months: [5, 6, 9, 10],
+        category: "park",
         scope: "trip",
-        duration: "1 day",
+        duration: "1-2 days",
         highlights: [
-          "Wade upriver through the slot canyon",
-          "Wall Street is the dramatic narrow section",
-          "Rent canyoneering boots, drysuit & a stick"
+          "Sunrise & Sunset Point over the hoodoos",
+          "Navajo Loop & Queen's Garden combo hike",
+          "Bryce Point at sunrise",
+          "Cool, high-elevation air"
         ],
-        note: "Late spring/early summer has lower, warmer flows; check flash-flood risk.",
-        prereq: "No permit for bottom-up day hikes, but rent drysuit/canyoneering boots in advance and check the river flow forecast (CFS) before going."
-      },
-      {
-        title: "Angels Landing",
-        months: [4, 5, 10],
-        category: "nature",
-        scope: "trip",
-        duration: "1 day",
-        highlights: [
-          "Chains section along the exposed spine",
-          "Sweeping views over Zion Canyon",
-          "Start at dawn to beat heat and crowds"
-        ],
-        prereq: "Permit REQUIRED. Apply via the Zion permit lottery (seasonal advance lottery + day-before lottery) on recreation.gov well ahead of your dates."
+        note: "At 8,000–9,000 ft, snow lingers into spring and summer afternoons stay mild. Pairs with Zion."
       }
     ]
   },
   {
-    place: "Kyoto",
-    region: "Japan",
+    place: "Rocky Mountain National Park",
+    region: "Colorado, USA",
     events: [
       {
-        title: "Cherry blossom season",
-        months: [3, 4],
-        category: "city",
+        title: "Alpine tundra & Trail Ridge Road",
+        months: [7, 8, 9],
+        category: "park",
         scope: "trip",
-        duration: "4-6 days",
+        duration: "2-3 days",
         highlights: [
-          "Philosopher's Path lined with sakura",
-          "Evening hanami at Maruyama Park",
-          "Arashiyama and Daigo-ji temple grounds"
+          "Trail Ridge Road, the highest paved road in the US",
+          "Bear Lake to Emerald Lake",
+          "Alpine wildflowers & tundra",
+          "Elk rut bugling in September"
         ],
-        note: "Peak sakura usually late March to early April."
-      },
+        note: "Trail Ridge Road is open roughly late May–mid October.",
+        prereq: "Timed-entry reservation REQUIRED late May–mid October 2026 via recreation.gov (separate Bear Lake Road corridor and park-wide permits)."
+      }
+    ]
+  },
+  {
+    place: "Petrified Forest National Park",
+    region: "Arizona, USA",
+    events: [
       {
-        title: "Autumn maple foliage",
-        months: [11],
-        category: "city",
+        title: "Petrified wood & painted badlands",
+        months: [3, 4, 10, 11],
+        category: "park",
         scope: "trip",
-        duration: "4-6 days",
+        duration: "1 day",
         highlights: [
-          "Tofuku-ji maple valley from the bridge",
-          "Eikan-do evening illuminations",
-          "Arashiyama bamboo grove with fall color"
+          "Crystal Forest & Giant Logs petrified wood",
+          "Blue Mesa badlands trail",
+          "Painted Desert overlooks",
+          "Historic Route 66 alignment"
         ],
-        note: "Temple gardens turn crimson in mid-to-late November."
+        note: "Day-use only (no overnight). Pleasant in spring and fall; summers are hot."
+      }
+    ]
+  },
+  {
+    place: "Mammoth Cave National Park",
+    region: "Kentucky, USA",
+    events: [
+      {
+        title: "World's longest cave system",
+        months: [4, 5, 9, 10],
+        category: "park",
+        scope: "trip",
+        duration: "1-2 days",
+        highlights: [
+          "Ranger-led Historic and Domes & Dripstones tours",
+          "The longest known cave system on Earth",
+          "Green River paddling",
+          "Surface trails with spring & fall color"
+        ],
+        note: "The cave is ~54°F year-round; the surface is best in spring and fall.",
+        prereq: "Book cave-tour tickets in advance on recreation.gov — popular tours sell out."
+      }
+    ]
+  },
+  {
+    place: "Hawai'i Volcanoes National Park",
+    region: "Big Island, Hawai'i, USA",
+    events: [
+      {
+        title: "Kīlauea & the volcanic landscape",
+        months: "all",
+        category: "park",
+        scope: "trip",
+        duration: "2 days",
+        highlights: [
+          "Kīlauea caldera & Halemaʻumaʻu (orange glow at night when active)",
+          "Chain of Craters Road down to the coast",
+          "Kīlauea Iki crater-floor hike",
+          "Lava tubes & steam vents"
+        ],
+        note: "Good year-round. Lava activity varies — check the current eruption status; the crater glow is best after dark when erupting."
+      }
+    ]
+  },
+  {
+    place: "Haleakalā National Park",
+    region: "Maui, Hawai'i, USA",
+    events: [
+      {
+        title: "Summit sunrise & crater",
+        months: "all",
+        category: "park",
+        scope: "trip",
+        duration: "1-2 days",
+        highlights: [
+          "Sunrise above the clouds from the summit",
+          "Sliding Sands Trail into the crater",
+          "Silverswords & world-class stargazing",
+          "Pipiwai Trail & bamboo forest (coastal Kīpahulu district)"
+        ],
+        note: "Good year-round. Bring warm layers — the summit can be near freezing at dawn.",
+        prereq: "Summit sunrise (3–7am) REQUIRES a reservation on recreation.gov (released 60 days ahead; sells out fast)."
+      }
+    ]
+  },
+  {
+    place: "Great Sand Dunes National Park",
+    region: "Colorado, USA",
+    events: [
+      {
+        title: "Tallest dunes in North America",
+        months: [5, 6, 9],
+        category: "park",
+        scope: "trip",
+        duration: "1 day",
+        highlights: [
+          "Sandboard or sled the dunes",
+          "Splash in Medano Creek (late May–early June)",
+          "Climb High Dune",
+          "Dark-sky stargazing"
+        ],
+        note: "Medano Creek flows peak late May–early June; the sand surface gets dangerously hot midday in summer."
+      }
+    ]
+  },
+  {
+    place: "Capitol Reef National Park",
+    region: "Utah, USA",
+    events: [
+      {
+        title: "Waterpocket Fold & Fruita orchards",
+        months: [4, 5, 9, 10],
+        category: "park",
+        scope: "trip",
+        duration: "1-2 days",
+        highlights: [
+          "Scenic Drive & Capitol Gorge",
+          "Hickman Bridge",
+          "Pick fruit in the historic Fruita orchards (in season)",
+          "Petroglyphs & Cassidy Arch"
+        ],
+        note: "Spring and fall are mild; orchard harvest runs roughly June–October depending on the fruit."
+      }
+    ]
+  },
+  {
+    place: "Big Bend National Park",
+    region: "Texas, USA",
+    events: [
+      {
+        title: "Canyons, mountains & dark skies",
+        months: [11, 12, 1, 2, 3],
+        category: "park",
+        scope: "trip",
+        duration: "3-4 days",
+        highlights: [
+          "Santa Elena Canyon on the Rio Grande",
+          "Chisos Basin & the Window",
+          "Rio Grande hot springs",
+          "Exceptional dark-sky stargazing"
+        ],
+        note: "Very remote; winter and early spring are ideal while summer is brutally hot. Spring break is the busy stretch."
+      }
+    ]
+  },
+  {
+    place: "Badlands National Park",
+    region: "South Dakota, USA",
+    events: [
+      {
+        title: "Eroded spires & prairie wildlife",
+        months: [5, 6, 9, 10],
+        category: "park",
+        scope: "trip",
+        duration: "1 day",
+        highlights: [
+          "Badlands Loop Road overlooks",
+          "Notch Trail & Door Trail",
+          "Bison & bighorn along Sage Creek Rim Road",
+          "Sunrise & sunset light on the formations"
+        ],
+        note: "Late spring and fall have the mildest temps; summers are hot and stormy. Sunrise/sunset light is best."
       }
     ]
   }
@@ -451,10 +827,10 @@ const DATA = [
 const MONTHS = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
                 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const CATEGORIES = [
-  { key: "nature", label: "Nature", color: "var(--nature)" },
-  { key: "city",   label: "City",   color: "var(--city)"   }
+  { key: "park", label: "National Park", color: "var(--park)" }
 ];
-const catColor = c => ({ nature: "var(--nature)", city: "var(--city)" }[c] || "var(--muted)");
+const catColor = c => ({ park: "var(--park)" }[c] || "var(--muted)");
+const catLabel = c => (CATEGORIES.find(x => x.key === c)?.label) || c;
 const SCOPES = [
   { key: "trip",    label: "Multi-day trip",     short: "🧳 Multi-day" },
   { key: "daytrip", label: "Day trip (Bay Area)", short: "🚗 Day trip"  }
@@ -467,7 +843,10 @@ const state = {
   selectedMonth: null,          // 1-12 or null
   selectedPlace: null,          // place name to focus in place view, or null
   activeCats: new Set(CATEGORIES.map(c => c.key)),
-  activeScopes: new Set(SCOPES.map(s => s.key))
+  activeScopes: new Set(SCOPES.map(s => s.key)),
+  yearRoundCollapsed: false,     // collapse the year-round band
+  monthOverrides: new Map(),     // m -> true(collapsed)/false(expanded); absent = default (empty months collapsed)
+  collapsedPlaces: new Set()     // place names collapsed in by-place view
 };
 
 // Flatten DATA into {place, region, ...event} records.
@@ -510,7 +889,7 @@ function eventEl(rec, opts = {}) {
   el.innerHTML = `
     ${heading}
     <div class="e-meta">
-      <span class="tag cat" style="--c:${catColor(rec.category)}">${escapeHtml(rec.category)}</span>
+      <span class="tag cat" style="--c:${catColor(rec.category)}">${escapeHtml(catLabel(rec.category))}</span>
       ${rec.scope ? `<span class="tag scope ${escapeHtml(rec.scope)}">${escapeHtml(scopeShort(rec.scope))}</span>` : ""}
       ${rec.duration ? `<span class="tag">${escapeHtml(rec.duration)}</span>` : ""}
       <span class="tag">${escapeHtml(monthsLabel)}</span>
@@ -538,7 +917,9 @@ function render() {
 
 function renderMonthView() {
   // Toggle containers
-  document.getElementById("yearRoundBand").style.display = "";
+  const bandEl = document.getElementById("yearRoundBand");
+  bandEl.style.display = "";
+  bandEl.classList.toggle("collapsed", state.yearRoundCollapsed);
   document.getElementById("grid").style.display = "";
   document.getElementById("placeGrid").style.display = "none";
   document.getElementById("monthPills").style.display = "";
@@ -571,9 +952,17 @@ function renderMonthView() {
       if (state.selectedMonth === m) card.classList.add("highlight");
       else card.classList.add("dim");
     }
-    let inner = `<h3><span>${MONTHS[m]}</span><span class="count">${monthRecs.length || ""}</span></h3>`;
-    card.innerHTML = inner;
-    if (monthRecs.length === 0) {
+    const hasEvents = monthRecs.length > 0;
+    // Default: empty months start collapsed; user toggles override the default.
+    const collapsed = state.monthOverrides.has(m) ? state.monthOverrides.get(m) : !hasEvents;
+    card.innerHTML = `<h3 class="clickable"><span class="head-left"><span class="caret"></span>${MONTHS[m]}</span><span class="count">${monthRecs.length || ""}</span></h3>`;
+    if (collapsed) card.classList.add("collapsed");
+    card.querySelector("h3").addEventListener("click", () => {
+      const willCollapse = !card.classList.contains("collapsed");
+      state.monthOverrides.set(m, willCollapse);
+      card.classList.toggle("collapsed", willCollapse);
+    });
+    if (!hasEvents) {
       const e = document.createElement("div");
       e.className = "empty";
       e.textContent = "—";
@@ -621,18 +1010,29 @@ function renderPlaceView() {
     if (state.selectedPlace) card.classList.add(focused ? "focus" : "dim");
 
     // Header (click to focus / unfocus this place)
+    if (state.collapsedPlaces.has(p.place)) card.classList.add("collapsed");
+
     const head = document.createElement("div");
     head.className = "place-head";
     head.innerHTML = `
-      <div>
-        <span class="place-name">${escapeHtml(p.place)}</span>
-        <span class="place-region">· ${escapeHtml(p.region)}</span>
+      <div class="place-head-left">
+        <span class="caret" title="Collapse / expand"></span>
+        <div>
+          <span class="place-name">${escapeHtml(p.place)}</span>
+          <span class="place-region">· ${escapeHtml(p.region)}</span>
+        </div>
       </div>
       <span class="place-count">${evs.length} ${evs.length === 1 ? "way" : "ways"} to experience</span>
     `;
     head.addEventListener("click", () => {
       state.selectedPlace = focused ? null : p.place;
       render();
+    });
+    head.querySelector(".caret").addEventListener("click", (ev) => {
+      ev.stopPropagation();   // don't trigger focus when collapsing
+      if (state.collapsedPlaces.has(p.place)) state.collapsedPlaces.delete(p.place);
+      else state.collapsedPlaces.add(p.place);
+      card.classList.toggle("collapsed");
     });
     card.appendChild(head);
 
@@ -789,6 +1189,13 @@ buildDisplayToggle();
 buildMonthPills();
 buildCatToggles();
 buildScopeToggles();
+
+// Year-round band: click the header to collapse / expand.
+document.getElementById("yearRoundHead").addEventListener("click", () => {
+  state.yearRoundCollapsed = !state.yearRoundCollapsed;
+  document.getElementById("yearRoundBand").classList.toggle("collapsed", state.yearRoundCollapsed);
+});
+
 render();
 </script>
 </body>
